@@ -19,20 +19,6 @@ function programDto(p,req){const selling=p.discountedPrice==null?p.price:p.disco
 function filterPrograms(query){const filter=availableEnrollment();if(query.group==='mentorship')filter.programCategory={$in:['Mentorship Course','Optional Mentorship Course']};if(query.group==='test-series')filter.programCategory={$in:['Test Series','Optional Test Series']};if(query.category)filter.programCategory=query.category;if(query.year)filter.year=query.year;if(query.search)filter.$or=[{programName:{$regex:regex(query.search),$options:'i'}},{programNameHindi:{$regex:regex(query.search),$options:'i'}}];if(query.medium)filter.medium=query.medium;return filter;}
 const getProgram=async id=>{const p=await Program.findOne({_id:id,...availableEnrollment()}).lean();if(!p)throw fail(404,'Active program not found.');return p;};
 exports.config=handle(async(req,res)=>res.json({success:true,data:await config()}));
-exports.updateConfig=handle(async(req,res)=>{
-  const data={
-    version:req.body.version.trim(),
-    phone:req.body.phone.trim(),
-    email:req.body.email.trim(),
-    whatsapp:req.body.whatsapp.trim(),
-    androidUrl:req.body.androidUrl.trim(),
-    iosUrl:req.body.iosUrl.trim(),
-    shareUrl:req.body.shareUrl.trim(),
-    banners:req.body.banners.map(banner=>banner.trim()).filter(Boolean)
-  };
-  const saved=await Content.findByIdAndUpdate('config',{$set:{data,updatedBy:req.user._id}},{new:true,upsert:true,runValidators:true});
-  res.json({success:true,message:'App settings updated successfully.',data:saved.data});
-});
 exports.onboarding=handle(async(req,res)=>res.json({success:true,data:await content('onboarding')||[]}));
 exports.support=handle(async(req,res)=>{const c=await config();res.json({success:true,data:{phone:c.phone,email:c.email,whatsappUrl:c.whatsapp?'https://wa.me/'+c.whatsapp.replace(/\D/g,''):null,version:c.version}});});
 exports.share=handle(async(req,res)=>{const c=await config();res.json({success:true,data:{text:'ThinkCivil IAS',url:c.shareUrl||c.androidUrl||c.iosUrl||null,androidUrl:c.androidUrl||null,iosUrl:c.iosUrl||null}});});
@@ -50,5 +36,5 @@ exports.testimonials=handle(async(req,res)=>list(Testimonial,{isActive:true},req
 function resourceDto(item,req){return {id:item._id,name:text(req,item.name?.english,item.name?.hindi),type:item.type==='file'?'file':'folder',image:item.image||null,fileType:item.type==='file'?item.fileType||'other':null,url:item.type==='file'?item.fileLink||null:null,parentId:item.parent||null};}
 exports.resources=handle(async(req,res)=>{const filter={isActive:true,parent:req.query.parentId||null};await list(Module,filter,req,res,{order:1,'name.english':1},'-createdBy -__v -quizId -moduleTestId',m=>resourceDto(m,req));});
 exports.resource=handle(async(req,res)=>{const item=await Module.findOne({_id:req.params.id,isActive:true}).select('-createdBy -__v').lean();if(!item)throw fail(404,'Resource not found.');res.json({success:true,data:resourceDto(item,req)});});
-exports.dashboard=handle(async(req,res)=>{const[mentorship,testSeries,plans,news,videos,testimonials,settings,unread]=await Promise.all([Program.find(filterPrograms({group:'mentorship'})).sort({order:1}).limit(10).lean(),Program.find(filterPrograms({group:'test-series'})).sort({order:1}).limit(10).lean(),Plan.find({isActive:true}).sort({displayOrder:1}).limit(6).lean(),News.find({isActive:true}).sort({createdAt:-1}).limit(10).lean(),Video.find({isActive:true}).sort({createdAt:-1}).limit(10).lean(),Testimonial.find({isActive:true}).sort({createdAt:-1}).limit(10).lean(),config(),Notification.countDocuments({audience:{$in:visibleAudiences(req.user.type)},readBy:{$ne:req.user._id}})]);res.json({success:true,data:{user:profile(req.user),unreadNotifications:unread,banners:settings.banners,mentorship:mentorship.map(p=>programDto(p,req)),testSeries:testSeries.map(p=>programDto(p,req)),plans,news:news.map(n=>({id:n._id,text:text(req,n.text,n.textHi)})),videos,testimonials,support:settings}});});
+exports.dashboard=handle(async(req,res)=>{const[mentorship,testSeries,plans,news,videos,testimonials,settings,unread]=await Promise.all([Program.find(filterPrograms({group:'mentorship'})).sort({order:1}).limit(6).lean(),Program.find(filterPrograms({group:'test-series'})).sort({order:1}).limit(6).lean(),Plan.find({isActive:true}).sort({displayOrder:1}).limit(6).lean(),News.find({isActive:true}).sort({createdAt:-1}).limit(10).lean(),Video.find({isActive:true}).sort({createdAt:-1}).limit(6).lean(),Testimonial.find({isActive:true}).sort({createdAt:-1}).limit(6).lean(),config(),Notification.countDocuments({audience:{$in:visibleAudiences(req.user.type)},readBy:{$ne:req.user._id}})]);res.json({success:true,data:{user:profile(req.user),unreadNotifications:unread,banners:settings.banners,mentorship:mentorship.map(p=>programDto(p,req)),testSeries:testSeries.map(p=>programDto(p,req)),plans,news:news.map(n=>({id:n._id,text:text(req,n.text,n.textHi)})),videos,testimonials,support:settings}});});
 exports.getConfig=config;

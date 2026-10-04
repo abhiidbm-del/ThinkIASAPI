@@ -4,8 +4,10 @@ const router = express.Router();
 const liveTestController = require('../controllers/liveTestController');
 const { auth, adminAuth } = require('../middleware/auth');
 const { uploadAnswerSheet } = require('../config/r2');
-const requirePlan = require('../utils/planAccess').requirePlan;
-const requireMains = requirePlan('mains');
+const requireMains = (req, res, next) => {
+  if (req.user.role === 'admin' || ['mains', 'combo'].includes(req.user.type)) return next();
+  return res.status(403).json({ success: false, message: 'An active Mains plan is required.', messageHindi: 'सक्रिय मेन्स प्लान आवश्यक है।' });
+};
 
 // ============================================
 // ADMIN ROUTES
@@ -23,7 +25,7 @@ router.get('/:id/submissions', auth, adminAuth, liveTestController.getSubmission
 router.get('/student/all', auth, requireMains, liveTestController.getAvailableTests);
 router.get('/student/available', auth, requireMains, liveTestController.getCurrentlyAvailableTests);
 router.get('/student/upcoming', auth, requireMains, liveTestController.getUpcomingTests);
-router.get('/student/my-participations', auth, requireMains, liveTestController.getMyParticipations);
+router.get('/student/my-participations', auth, liveTestController.getMyParticipations);
 router.post('/:id/reopen', auth, adminAuth, liveTestController.reopenLiveTest);
 router.post('/:id/submit', auth, requireMains, uploadAnswerSheet, liveTestController.submitLiveTestAnswer);
 

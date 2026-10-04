@@ -47,8 +47,8 @@ const createAnnouncement = async (req, res) => {
 const getAllAnnouncements = async (req, res) => {
   try {
     const announcements = await Announcement.find()
-      .populate('createdBy', 'fullName email profileImage')
-      .populate('lastUpdatedBy', 'fullName email profileImage')
+      .populate('createdBy', 'fullName email')
+      .populate('lastUpdatedBy', 'fullName email')
       .sort({ publishDate: -1 });
     
     res.json({
@@ -71,7 +71,7 @@ const getActiveAnnouncements = async (req, res) => {
   try {
     const announcements = await Announcement.find({ isActive: true })
       .select('title titleHindi shortDescription shortDescriptionHindi publishDate isActive createdBy')
-      .populate('createdBy', 'fullName email profileImage')
+      .populate('createdBy', 'fullName email')
       .sort({ publishDate: -1 })
       .limit(20);
     
@@ -109,8 +109,8 @@ const getAnnouncementById = async (req, res) => {
     const { id } = req.params;
     
     const announcement = await Announcement.findById(id)
-      .populate('createdBy', 'fullName email profileImage')
-      .populate('lastUpdatedBy', 'fullName email profileImage');
+      .populate('createdBy', 'fullName email')
+      .populate('lastUpdatedBy', 'fullName email');
     
     if (!announcement) {
       return res.status(404).json({
@@ -161,8 +161,8 @@ const updateAnnouncement = async (req, res) => {
       id,
       updateData,
       { new: true, runValidators: true }
-    ).populate('createdBy', 'fullName email profileImage')
-     .populate('lastUpdatedBy', 'fullName email profileImage');
+    ).populate('createdBy', 'fullName email')
+     .populate('lastUpdatedBy', 'fullName email');
     if (updatedAnnouncement.isActive) publishSystemNotification({ title: updatedAnnouncement.title.slice(0,120), titleHindi: updatedAnnouncement.titleHindi.slice(0,120), body: (updatedAnnouncement.shortDescription || 'Announcement updated.').slice(0,500), bodyHindi: (updatedAnnouncement.shortDescriptionHindi || 'घोषणा अपडेट हुई है।').slice(0,500), type: 'news', audience: 'all', link: '/dashboard', createdBy: req.user._id }).catch(error => console.error('Announcement notification:', error.message));
     
     res.json({

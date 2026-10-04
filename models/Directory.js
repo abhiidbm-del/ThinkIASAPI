@@ -55,12 +55,6 @@ const directorySchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true
-  },
-  section: {
-    type: String,
-    enum: ['pre', 'mains'],
-    default: 'pre',
-    index: true
   }
 }, {
   timestamps: true
@@ -80,7 +74,7 @@ directorySchema.set('toObject', { virtuals: true });
 // Indexes
 directorySchema.index({ parent: 1 });
 directorySchema.index({ createdBy: 1 });
-directorySchema.index({ fullPath: 1, createdBy: 1, section: 1 }, { unique: true });
+directorySchema.index({ fullPath: 1, createdBy: 1 }, { unique: true });
 directorySchema.index({ fileType: 1 });
 directorySchema.index({ name: 'text', description: 'text' });
 
@@ -140,11 +134,8 @@ directorySchema.statics.deleteRecursive = async function(directoryId) {
 };
 
 // Method to check if path exists
-directorySchema.statics.pathExists = async function(fullPath, userId, section) {
-  const query = { fullPath, createdBy: userId };
-  if (section === 'mains') query.section = 'mains';
-  else query.$or = [{ section: 'pre' }, { section: { $exists: false } }, { section: null }];
-  return await this.findOne(query);
+directorySchema.statics.pathExists = async function(fullPath, userId) {
+  return await this.findOne({ fullPath, createdBy: userId });
 };
 
 // Method to get all files of a specific type for a user

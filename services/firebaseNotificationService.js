@@ -24,7 +24,7 @@ function initializeFirebase() {
 
 async function pushNotification(notification) {
   if (!initializeFirebase()) return { sent: 0, skipped: true };
-  const users = await User.find({ role: 'student', type: { $in: audienceTypes(notification.audience) } }).distinct('_id');
+  const users = await User.find({ role: 'student', ...(notification.audience === 'all' ? {} : { type: { $in: audienceTypes(notification.audience) } }) }).distinct('_id');
   const devices = await DeviceToken.find({ user: { $in: users } }).select('token language').lean();
   const invalid = [];
   let sent = 0, failed = 0;

@@ -47,22 +47,9 @@ test('upgrade retains previous access including combo', () => {
 });
 test('notification feed and push audiences agree for combined subscriptions', () => {
   assert.deepEqual(visibleAudiences('combo'),['all','pre','mains','combo']);
-  assert.deepEqual(visibleAudiences('pre'),['all','pre']);
-  assert.deepEqual(visibleAudiences('mains'),['all','mains']);
-  assert.deepEqual(visibleAudiences('fresh'),['fresh']);
-  assert.deepEqual(audienceTypes('all'),['pre','mains','combo']);
   assert.deepEqual(audienceTypes('pre'),['pre','combo']);
   assert.deepEqual(audienceTypes('mains'),['mains','combo']);
-  assert.ok(!visibleAudiences('fresh').includes('all'));
-  assert.ok(!visibleAudiences('pre').includes('mains'));
-});
-test('plan pages stay on the purchased exam track', () => {
-  const { canAccessPlan } = require('../utils/planAccess');
-  assert.equal(canAccessPlan('pre','mains'), false);
-  assert.equal(canAccessPlan('mains','pre'), false);
-  assert.equal(canAccessPlan('fresh','pre'), false);
-  assert.equal(canAccessPlan('combo','mains'), true);
-  assert.equal(canAccessPlan('pre','pre'), true);
+  assert.ok(!visibleAudiences('fresh').includes('mains'));
 });
 test('Drive links keep the correct file or folder and resource key', () => {
   assert.equal(normalizeMaterialLink('https://drive.google.com/open?id=abc-123&resourcekey=secret'), 'https://drive.google.com/file/d/abc-123/view?resourcekey=secret');

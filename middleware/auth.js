@@ -3,18 +3,6 @@ const { JWT } = require('../config/constants');
 const { handleError } = require('./errorHandler');
 const User = require('../models/User');
 
-const optionalAuth = async (req, res, next) => {
-  const token = req.header('Authorization')?.replace('Bearer ', '');
-  if (!token) return next();
-  try {
-    const decoded = jwt.verify(token, JWT.SECRET);
-    const userId = decoded.userId || decoded.id;
-    const user = await User.findById(userId).select('-password');
-    if (user && user.isActive !== false) req.user = user;
-  } catch (_) {}
-  next();
-};
-
 const auth = async (req, res, next) => {
   try {
     const token = req.header('Authorization')?.replace('Bearer ', '');
@@ -79,8 +67,7 @@ const protect = auth;
 const admin = adminAuth;
 
 module.exports = { 
-  auth,
-  optionalAuth,
+  auth, 
   adminAuth, 
   studentAuth,
   protect,  // Alias for career API

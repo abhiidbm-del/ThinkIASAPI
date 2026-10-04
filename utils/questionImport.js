@@ -178,87 +178,6 @@ async function parseQuestionImportFile(fileBuffer, fileName) {
   throw new Error('Unsupported file type. Please upload a CSV, JSON, or DOCX file.');
 }
 
-function normalizeQuestionText(value) {
-  return String(value || '')
-    .replace(/<[^>]*>/g, ' ')
-    .normalize('NFKC')
-    .toLocaleLowerCase()
-    .replace(/[\p{P}\p{S}]+/gu, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
-
-function removeDuplicateQuestions(questions) {
-  const firstQuestionByText = new Map();
-  const uniqueQuestions = [];
-  const questionIndices = [];
-  const duplicateQuestions = [];
-
-  questions.forEach((item, index) => {
-    const texts = [...new Set([
-      normalizeQuestionText(item.question?.english),
-      normalizeQuestionText(item.question?.hindi)
-    ].filter(Boolean))];
-    const firstIndex = texts.map(text => firstQuestionByText.get(text)).find(value => value !== undefined);
-
-    if (firstIndex !== undefined) {
-      duplicateQuestions.push({
-        duplicateIndex: index + 1,
-        firstIndex: firstIndex + 1,
-        questionText: item.question?.english || item.question?.hindi || '',
-        questionHindi: item.question?.hindi || '',
-        reason: 'repeated-in-file'
-      });
-      return;
-    }
-
-    uniqueQuestions.push(item);
-    questionIndices.push(index + 1);
-    texts.forEach(text => firstQuestionByText.set(text, index));
-  });
-
-  return { questions: uniqueQuestions, questionIndices, duplicateQuestions };
-}
-
-function removeExistingQuestions(questions, existingQuestions, questionIndices = []) {
-  const existingTextMap = new Map();
-  existingQuestions.forEach(item => {
-    const texts = [...new Set([
-      normalizeQuestionText(item.question?.english),
-      normalizeQuestionText(item.question?.hindi)
-    ].filter(Boolean))];
-    texts.forEach(text => existingTextMap.set(text, item));
-  });
-
-  const uniqueQuestions = [];
-  const keptQuestionIndices = [];
-  const duplicateQuestions = [];
-
-  questions.forEach((item, index) => {
-    const texts = [...new Set([
-      normalizeQuestionText(item.question?.english),
-      normalizeQuestionText(item.question?.hindi)
-    ].filter(Boolean))];
-    const existing = texts.map(text => existingTextMap.get(text)).find(Boolean);
-
-    if (existing) {
-      duplicateQuestions.push({
-        duplicateIndex: questionIndices[index] ?? index + 1,
-        questionText: item.question?.english || item.question?.hindi || '',
-        questionHindi: item.question?.hindi || '',
-        existingQuestionText: existing.question?.english || existing.question?.hindi || '',
-        reason: 'already-added'
-      });
-      return;
-    }
-
-    uniqueQuestions.push(item);
-    keptQuestionIndices.push(questionIndices[index] ?? index + 1);
-  });
-
-  return { questions: uniqueQuestions, questionIndices: keptQuestionIndices, duplicateQuestions };
-}
-
 function validateQuestions(input) {
   if (!Array.isArray(input) || !input.length || input.length > 1000) throw new Error('Provide between 1 and 1000 questions.');
   const errors = [];
@@ -275,4 +194,4 @@ function validateQuestions(input) {
   if (errors.length) throw new Error(errors.slice(0, 20).join('\n'));
   return input;
 }
-module.exports = { parseCSV, validateQuestions, parseQuestionImportFile, parseDocumentTextQuestions, removeDuplicateQuestions, removeExistingQuestions };
+module.exports = { parseCSV, validateQuestions, parseQuestionImportFile, parseDocumentTextQuestions };

@@ -5,7 +5,7 @@ const notificationSchema = new mongoose.Schema({
   bodyHindi: { type: String, trim: true, maxlength: 500, default: '' },
   title: { type: String, required: true, trim: true, maxlength: 120 },
   body: { type: String, required: true, trim: true, maxlength: 500 },
-  type: { type: String, enum: ['news', 'test_series', 'live_test', 'general'], default: 'general' },
+  type: { type: String, enum: ['news', 'test_series', 'general'], default: 'general' },
   audience: { type: String, enum: ['all', 'fresh', 'pre', 'mains', 'combo'], default: 'all' },
   link: { type: String, default: '' },
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },

@@ -5,14 +5,13 @@ const messages = require('../utils/messages');
 
 // Helper function to remove correct answers
 const removeCorrectAnswers = (test) => {
-  const plain = typeof test?.toObject === 'function' ? test.toObject() : { ...test };
-  if (!plain.questions || !Array.isArray(plain.questions)) {
-    return plain;
+  if (!test.questions || !Array.isArray(test.questions)) {
+    return test;
   }
   
   return {
-    ...plain,
-    questions: plain.questions.map(q => ({
+    ...test.toObject(),
+    questions: test.questions.map(q => ({
       uid: q.uid,
       question: q.question,
       description: q.description || { english: '', hindi: '' },
@@ -102,16 +101,13 @@ const getAvailableDemoTests = async (req, res) => {
   try {
     let tests;
     
-    if (req.user?.role === 'admin') {
+    if (req.user.role === 'admin') {
       tests = await DemoTestService.getAllActiveDemoTests();
       return res.json(tests);
-    }
-
+    } 
+    
+    // For students
     tests = await DemoTestService.getAvailableDemoTestsForStudent();
-
-    if (!req.user) {
-      return res.json(tests.map((test) => removeCorrectAnswers(test)));
-    }
     
     // Check submission status for each test
     const testsWithSubmissionStatus = await Promise.all(
@@ -144,19 +140,22 @@ const getDemoTestById = async (req, res) => {
     }
     
     // Check if test is active (for students)
-    if (req.user?.role === 'student' && !test.isActive) {
+    if (req.user.role === 'student' && !test.isActive) {
       return res.status(400).json({ message: 'This demo test is not active' });
     }
     
-    if (req.user?.role === 'admin') {
-      return res.json(test);
+    if (req.user.role === 'student') {
+      // Remove correct answers for students
+      const testWithoutAnswers = removeCorrectAnswers(test);
+      
+      return res.json({
+        ...testWithoutAnswers,
+        submitted: false
+      });
     }
 
-    const testWithoutAnswers = removeCorrectAnswers(test);
-    return res.json({
-      ...testWithoutAnswers,
-      submitted: false
-    });
+    // Admin gets full test with correct answers
+    res.json(test);
   } catch (error) {
     handleError(res, error, error.message);
   }

@@ -71,12 +71,6 @@ const videoLectureSchema = new mongoose.Schema({
     enum: ['video', 'youtube', 'vimeo', 'drive', 'other'],
     default: 'video'
   },
-  language: {
-    type: String,
-    enum: ['en', 'hi', 'both'],
-    default: 'both',
-    index: true
-  },
   
   // Metadata
   createdBy: {
@@ -178,19 +172,7 @@ videoLectureSchema.statics.getTreeByCategory = async function(category, parentId
 };
 
 // Get public tree by category
-videoLectureSchema.statics.matchesSiteLanguage = function(item, lang) {
-  if (!lang || lang === 'both') return true;
-  const explicit = item.language;
-  if (explicit === 'en' || explicit === 'hi') return explicit === lang;
-  const name = item.name || '';
-  const looksHindi = /hindi|हिंदी|हिन्दी/i.test(name);
-  const looksEnglish = /english|अंग्रेजी/i.test(name);
-  if (lang === 'en' && looksHindi && !looksEnglish) return false;
-  if (lang === 'hi' && looksEnglish && !looksHindi) return false;
-  return true;
-};
-
-videoLectureSchema.statics.getPublicTreeByCategory = async function(category, parentId = null, lang = 'en') {
+videoLectureSchema.statics.getPublicTreeByCategory = async function(category, parentId = null) {
   const query = { category };
   
   if (parentId) {
@@ -203,12 +185,11 @@ videoLectureSchema.statics.getPublicTreeByCategory = async function(category, pa
   }
 
   const items = await this.find(query)
-    .select('name type category path fullPath parent fileLink description duration thumbnail fileType language')
+    .select('name type category path fullPath parent fileLink description duration thumbnail fileType')
     .sort({ type: 1, name: 1 })
     .lean();
 
-  const visible = items.filter((item) => this.matchesSiteLanguage(item, lang));
-  return this.buildTree(visible);
+  return this.buildTree(items);
 };
 
 // Helper method to build tree

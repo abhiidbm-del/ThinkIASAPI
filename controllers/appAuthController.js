@@ -6,15 +6,13 @@ const Challenge = require('../models/AppAuthChallenge');
 const Session = require('../models/AppAuthSession');
 const {JWT} = require('../config/constants');
 const {inactiveAccount} = require('../utils/accountStatus');
-const {loginQuery} = require('../utils/loginAccount');
-const {profile}=require('../utils/appApi');
+const {findLoginUser} = require('../utils/loginAccount');
 
 // Explicit app test flow requested by the client. No email service is invoked.
 const TEST_OTP = '1234';
 const OTP_TTL_MS = 10 * 60 * 1000;
 const RESEND_SECONDS = 120;
 const hash = value => crypto.createHash('sha256').update(value).digest('hex');
-const findLoginUser = identifier => User.findOne(loginQuery(identifier));
 const error = (status, message, code) => Object.assign(new Error(message), {status, code});
 const handle = fn => async (req, res) => {
   try { await fn(req, res); }
@@ -23,7 +21,7 @@ const handle = fn => async (req, res) => {
     res.status(status).json({success:false, message:err.code === 11000 ? 'This email is already registered. Please log in.' : status === 500 ? 'Unable to complete the request. Please try again.' : err.message, ...(typeof err.code === 'string' ? {code:err.code} : {})});
   }
 };
-const publicUser = user => ({_id:user._id,fullName:user.fullName,email:user.email,phone:user.phone,profileImage:user.profileImage||null,role:user.role,type:user.type,isActive:user.isActive !== false,emailVerified:!!user.emailVerifiedAt});
+const publicUser = user => ({_id:user._id,fullName:user.fullName,email:user.email,phone:user.phone,role:user.role,type:user.type,isActive:user.isActive !== false,emailVerified:!!user.emailVerifiedAt});
 const available = (email, purpose) => ({email,purpose,expiresAt:{$gt:new Date()},consumedAt:{$exists:false}});
 function challengeResponse(res, challenge) {
   res.json({success:true,message:'Test OTP ready. Use 1234; no email is sent.',data:{challengeId:challenge._id,email:challenge.email,purpose:challenge.purpose,expiresAt:challenge.expiresAt,resendAfterSeconds:RESEND_SECONDS,otpLength:4,testMode:true}});
@@ -38,12 +36,12 @@ async function student(email) {
   if (user.isActive === false) throw error(403,inactiveAccount.message,'ACCOUNT_INACTIVE');
   return user;
 }
-async function sessionResponse(res,user,status=200,req) {
+async function sessionResponse(res,user,status=200) {
   const expiresAt = new Date(Date.now()+24*60*60*1000);
   const appSessionId = crypto.randomUUID();
   const token = jwt.sign({userId:String(user._id),appSessionId,appAuthVersion:user.appAuthVersion||0},JWT.SECRET,{expiresIn:'24h'});
   await Session.create({_id:appSessionId,user:user._id,expiresAt});
-  res.status(status).json({success:true,message:status===201?'Registration successful.':'Login successful.',data:{token,tokenType:'Bearer',expiresAt,user:publicUser(await fullUser(user),req)}});
+  res.status(status).json({success:true,message:status===201?'Registration successful.':'Login successful.',data:{token,tokenType:'Bearer',expiresAt,user:publicUser(user)}});
 }
 exports.sendOtp = handle(async (req,res) => {
   if (await User.exists({email:req.body.email})) throw error(409,'This email is already registered. Please log in.','EMAIL_EXISTS');
@@ -90,13 +88,13 @@ exports.register = handle(async (req,res) => {
   if (await User.exists({email})) throw error(409,'This email is already registered. Please log in.','EMAIL_EXISTS');
   await consume(email,'registration',verificationToken);
   const user = await User.create({fullName,email,phone,password,role:'student',type:'fresh',emailVerifiedAt:new Date()});
-  await sessionResponse(res,user,201,req);
+  await sessionResponse(res,user,201);
 });
 exports.login = handle(async (req,res) => {
   const user = await findLoginUser(req.body.email);
   if (!user || user.role !== 'student' || !await user.comparePassword(req.body.password)) throw error(401,'Invalid email or password.','INVALID_CREDENTIALS');
   if (user.isActive === false) throw error(403,inactiveAccount.message,'ACCOUNT_INACTIVE');
-  await sessionResponse(res,user,200,req);
+  await sessionResponse(res,user);
 });
 exports.resetPassword = handle(async (req,res) => {
   const user = await student(req.body.email);
@@ -106,8 +104,8 @@ exports.resetPassword = handle(async (req,res) => {
   await Session.deleteMany({user:user._id});
   res.json({success:true,message:'Password reset successfully. Please log in with your new password.'});
 });
-exports.me = handle(async(req,res)=>res.json({success:true,data:{user:publicUser(await fullUser(req.user),req)}}));
+exports.me = handle(async(req,res)=>res.json({success:true,data:{user:publicUser(req.user)}}));
 exports.logout = handle(async(req,res)=>{
-  if (req.appSession) await Session.deleteOne({_id:req.appSession._id,user:req.user._id});
+  await Session.deleteOne({_id:req.appSession._id,user:req.user._id});
   res.json({success:true,message:'Logged out successfully.'});
 });

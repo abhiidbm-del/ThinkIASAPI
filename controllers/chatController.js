@@ -59,7 +59,7 @@ const sendMessage = async (req, res) => {
     await newMessage.save();
 
     // Populate sender details
-    await newMessage.populate('sender', 'fullName email role profileImage');
+    await newMessage.populate('sender', 'fullName email role');
     
     res.status(201).json(newMessage);
     
@@ -97,8 +97,8 @@ const getChatMessages = async (req, res) => {
 
     // Get messages
     const chatMessages = await ChatMessage.find({ result: resultId })
-      .populate('sender', 'fullName email role profileImage')
-      .populate('receiver', 'fullName email role profileImage')
+      .populate('sender', 'fullName email role')
+      .populate('receiver', 'fullName email role')
       .sort({ createdAt: 1 });
 
     // Mark unread messages as read for current user
@@ -164,7 +164,7 @@ const updateMessage = async (req, res) => {
     await existingMessage.save();
 
     // Populate sender details
-    await existingMessage.populate('sender', 'fullName email role profileImage');
+    await existingMessage.populate('sender', 'fullName email role');
     
     res.json(existingMessage);
     

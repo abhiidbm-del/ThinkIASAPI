@@ -14,7 +14,7 @@ const serialize = ticket => {
 };
 
 const owned = async (req) => {
-  const ticket = await SupportTicket.findById(req.params.id).populate('createdBy', 'fullName email profileImage').populate('messages.by', 'fullName role profileImage');
+  const ticket = await SupportTicket.findById(req.params.id).populate('createdBy', 'fullName email').populate('messages.by', 'fullName role');
   if (!ticket) { const error = new Error('Ticket not found.'); error.status = 404; throw error; }
   if (req.user.role !== 'admin' && String(ticket.createdBy._id || ticket.createdBy) !== String(req.user._id)) {
     const error = new Error('You can only view your own tickets.'); error.status = 403; throw error;
@@ -43,7 +43,7 @@ exports.listTickets = async (req, res) => {
     const filter = req.user.role === 'admin' ? {} : { createdBy: req.user._id };
     if (req.query.status && ['open', 'in_progress', 'closed'].includes(req.query.status)) filter.status = req.query.status;
     const [items, total] = await Promise.all([
-      SupportTicket.find(filter).populate('createdBy', 'fullName email profileImage').sort({ updatedAt: -1 }).skip((page - 1) * limit).limit(limit),
+      SupportTicket.find(filter).populate('createdBy', 'fullName email').sort({ updatedAt: -1 }).skip((page - 1) * limit).limit(limit),
       SupportTicket.countDocuments(filter)
     ]);
     res.json({ success: true, data: items.map(serialize), pagination: { currentPage: page, totalPages: Math.ceil(total / limit), totalItems: total } });
@@ -72,7 +72,7 @@ exports.replyTicket = async (req, res) => {
 exports.updateStatus = async (req, res) => {
   try {
     if (!['open', 'in_progress', 'closed'].includes(req.body.status)) return res.status(400).json({ success: false, message: 'Status must be open, in_progress or closed.' });
-    const ticket = await SupportTicket.findByIdAndUpdate(req.params.id, { status: req.body.status }, { new: true }).populate('createdBy', 'fullName email profileImage');
+    const ticket = await SupportTicket.findByIdAndUpdate(req.params.id, { status: req.body.status }, { new: true }).populate('createdBy', 'fullName email');
     if (!ticket) return res.status(404).json({ success: false, message: 'Ticket not found.' });
     res.json({ success: true, data: serialize(ticket) });
   } catch (error) { res.status(400).json({ success: false, message: error.message }); }

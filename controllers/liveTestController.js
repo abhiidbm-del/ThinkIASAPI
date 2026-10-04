@@ -60,10 +60,10 @@ exports.createLiveTest = async (req, res) => {
 
     await liveTest.save();
     if (liveTest.isActive) publishSystemNotification({
-      title: `Live Test: ${liveTest.title}`,
-      body: `Starts ${new Date(liveTest.startDateTime).toLocaleString('en-IN')}. Join from Live Tests.`,
-      titleHindi: `लाइव टेस्ट: ${liveTest.titleHi || liveTest.title}`, bodyHindi: liveTest.descriptionHi || 'लाइव टेस्ट उपलब्ध है। Live Tests से जॉइन करें।',
-      type: 'live_test', audience: 'mains',
+      title: `New test: ${liveTest.title}`,
+      body: liveTest.description || 'A new test series is available.',
+      titleHindi: `नया टेस्ट: ${liveTest.titleHi || liveTest.title}`, bodyHindi: liveTest.descriptionHi || 'नई टेस्ट सीरीज़ उपलब्ध है।',
+      type: 'test_series', audience: 'mains',
       link: '/live-test', createdBy: req.user._id
     }).catch(error => console.error('Test notification failed:', error.message));
 
@@ -330,7 +330,7 @@ exports.getMyParticipations = async (req, res) => {
 exports.getSubmissions = async (req, res) => {
   try {
     const filter = req.params.id ? { testId: req.params.id } : {};
-    const data = await LiveTestSubmission.find(filter).populate('studentId', 'fullName email profileImage').populate('testId', 'title titleHi').sort({ submittedAt: -1 }).lean();
+    const data = await LiveTestSubmission.find(filter).populate('studentId', 'fullName email').populate('testId', 'title titleHi').sort({ submittedAt: -1 }).lean();
     res.json({ success: true, data });
   } catch (error) { res.status(400).json({ success: false, message: error.message }); }
 };

@@ -1,12 +1,11 @@
 const Program = require('../models/Program');
-const Batch = require('../models/Batch');
 
 // @desc    Get all programs
 // @route   GET /api/programs
 // @access  Public
 const getPrograms = async (req, res) => {
   try {
-    const { category, year, activeOnly, examination, programStage } = req.query;
+    const { category, year, activeOnly } = req.query;
     
     let query = {};
     
@@ -18,14 +17,6 @@ const getPrograms = async (req, res) => {
     // Filter by year
     if (year) {
       query.year = year;
-    }
-
-    if (examination) {
-      query.examination = examination;
-    }
-
-    if (programStage) {
-      query.programStage = programStage;
     }
     
     // Filter active only
@@ -151,9 +142,6 @@ const createProgram = async (req, res) => {
       programNameHindi: req.body.programNameHindi, descriptionHindi: req.body.descriptionHindi, durationHindi: req.body.durationHindi, featuresHindi: req.body.featuresHindi,
       programName,
       programCategory,
-      examination: req.body.examination || 'UPSC',
-      programStage: req.body.programStage || 'Prelims',
-      paperVariant: req.body.paperVariant || '',
       year,
       price,
       discountedPrice: discountedPrice ?? null,
@@ -224,9 +212,6 @@ const updateProgram = async (req, res) => {
     // Update fields
     program.programName = programName || program.programName;
     program.programCategory = programCategory || program.programCategory;
-    if (req.body.examination) program.examination = req.body.examination;
-    if (req.body.programStage) program.programStage = req.body.programStage;
-    if (req.body.paperVariant !== undefined) program.paperVariant = req.body.paperVariant;
     program.year = year || program.year;
     program.price = price !== undefined ? price : program.price;
     program.discountedPrice = discountedPrice !== undefined ? discountedPrice : program.discountedPrice;
@@ -276,15 +261,6 @@ const deleteProgram = async (req, res) => {
       return res.status(404).json({
         success: false,
         message: 'Program not found'
-      });
-    }
-
-    const batchesCount = await Batch.countDocuments({ programId: program._id });
-    if (batchesCount) {
-      return res.status(409).json({
-        success: false,
-        batchesCount,
-        message: `Cannot delete this program: it still has ${batchesCount} batch(es). First delete its batches, then try deleting the program again.`
       });
     }
     

@@ -154,7 +154,7 @@ exports.adminDeleteAll = async (req, res) => {
 
 exports.adminList = async (req, res) => {
   const cutoff = new Date(Date.now() - 2 * 60 * 1000);
-  const data = await ProctorSession.find().populate('student', 'fullName email phone profileImage').populate('test', 'title').sort({ lastHeartbeatAt: -1 }).limit(200).lean();
+  const data = await ProctorSession.find().populate('student', 'fullName email phone').populate('test', 'title').sort({ lastHeartbeatAt: -1 }).limit(200).lean();
   res.set('Cache-Control', 'no-store');
   res.json({ success: true, data: data.map(item => ({
     ...item,

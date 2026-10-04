@@ -10,8 +10,7 @@ const {
   updateQuiz,
   deleteQuiz,
   toggleQuizActive,
-  getQuizSubmissions,
-  getAllQuizSubmissions
+  getQuizSubmissions
 } = require('../controllers/quizController');
 const { auth, studentAuth, adminAuth } = require('../middleware/auth');
 const { apiLimiter } = require('../middleware/rateLimiter');
@@ -21,8 +20,6 @@ const { apiLimiter } = require('../middleware/rateLimiter');
 
 // Public routes (no auth required for users)
 router.get('/admin', auth, adminAuth, getQuizzes);
-router.get('/admin/submissions', auth, adminAuth, getAllQuizSubmissions);
-router.get('/active', getQuizzes);
 router.get('/:id', getQuizById);
 router.post('/:id/submit', submitQuiz); // No studentAuth - anyone can submit
 router.get('/:id/availability', checkQuizAvailability);

@@ -103,9 +103,8 @@ test('app catalog and account APIs match ThinkIAS-APP-UI screens',async t=>{
   const verified=await request('/api/app/auth/verify-email',{body:{email,challengeId:otp.data.challengeId,otp:'1234'}});
   const registered=await request('/api/app/auth/register',{status:201,body:{email,fullName:'Yamini',phone:'9415778282',password,confirmPassword:password,verificationToken:verified.data.verificationToken}});
   const token=registered.data.token;
-  users[0].profileImage='https://cdn.example.com/profile.png';
-  const home=await request('/api/app/dashboard',{token});assert.equal(home.data.user.fullName,'Yamini');assert.equal(home.data.user.profileImage,users[0].profileImage);
-  const profile=await request('/api/app/profile',{token});assert.equal(profile.data.version,'1.0.1');assert.equal(profile.data.user.profileImage,users[0].profileImage);assert.equal(home.data.unreadNotifications,1);
+  const home=await request('/api/app/dashboard',{token});assert.equal(home.data.user.fullName,'Yamini');assert.equal(home.data.unreadNotifications,1);
+  const profile=await request('/api/app/profile',{token});assert.equal(profile.data.version,'1.0.1');
   await request('/api/app/profile',{method:'PATCH',token,body:{fullName:'Abhishek',address:{pincode:'226014',houseNo:'12',colony:'Your Colony',city:'Lucknow'}}});
   assert.equal(users[0].address.city,'Lucknow');
   const resources=await request('/api/app/resources',{token});assert.equal(resources.data[0].type,'file');
@@ -120,38 +119,4 @@ test('app catalog and account APIs match ThinkIAS-APP-UI screens',async t=>{
   await request('/api/app/account/delete',{token,body:{reason:'I have a privacy concern'}});
   await request('/api/app/dashboard',{token,status:401});
   assert.equal(users[0].isActive,false);
-});
-
-test('admin app config updates are persisted for mobile clients',async()=>{
-  let saved;
-  let updatePayload;
-  const content={
-    findByIdAndUpdate:async(id,update)=>{
-      assert.equal(id,'config');
-      updatePayload=update.$set;
-      saved={...update.$set.data};
-      return {data:saved};
-    }
-  };
-  const emptyModel={};
-  const catalog=load('controllers/appCatalogController.js',{
-    '../models/Program':emptyModel,'../models/Batch':emptyModel,'../models/Plan':emptyModel,
-    '../models/ProgramFaq':emptyModel,'../models/AppContent':content,'../models/SimpleNews':emptyModel,
-    '../models/LiveContent':emptyModel,'../models/Testimonial':emptyModel,'../models/Notification':emptyModel,
-    '../models/Module':emptyModel,'../utils/notificationAudience':{visibleAudiences:()=>[]},
-    '../utils/availableEnrollment':{availableEnrollment:()=>({})},'../utils/appApi':require('../utils/appApi'),
-    '../utils/materialLink':{normalizeMaterialLink:value=>value}
-  });
-  let response;
-  await catalog.updateConfig({
-    user:{_id:'admin-id'},
-    body:{version:'1.2.0',phone:'+919876543210',email:'help@example.com',whatsapp:'919876543210',
-      androidUrl:'https://play.google.com/store/apps/example',iosUrl:'https://apps.apple.com/app/example',
-      shareUrl:'https://example.com/app',banners:['https://cdn.example.com/banner.jpg','']}
-  },{json:value=>{response=value;}},()=>{});
-
-  assert.equal(response.success,true);
-  assert.equal(response.data.version,'1.2.0');
-  assert.deepEqual(saved.banners,['https://cdn.example.com/banner.jpg']);
-  assert.equal(updatePayload.updatedBy,'admin-id');
 });

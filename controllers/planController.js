@@ -1,8 +1,6 @@
 // controllers/planController.js
 const { PLANS } = require('../config/plans');
 const Plan = require('../models/Plan');
-const Program = require('../models/Program');
-const Batch = require('../models/Batch');
 
 const defaults = Object.values(PLANS).map((plan, index) => ({
   ...plan,
@@ -61,7 +59,7 @@ const getPlanDetails = async (req, res) => {
 const getAdminPlans = async (_req, res) => {
   try {
     await ensurePlans();
-    res.json({ success: true, data: await Plan.find({ isDeleted: { $ne: true } }).sort({ displayOrder: 1 }).select('-__v').lean() });
+    res.json({ success: true, data: await Plan.find().sort({ displayOrder: 1 }).select('-__v').lean() });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -74,7 +72,7 @@ const updatePlan = async (req, res) => {
     const allowed = ['accessType', 'nameHindi', 'subtitleHindi', 'badgeHindi', 'durationHindi', 'featuresHindi', 'name', 'subtitle', 'badge', 'baseAmount', 'totalAmount', 'duration', 'features', 'displayOrder', 'isActive'];
     const update = Object.fromEntries(allowed.filter(key => req.body[key] !== undefined).map(key => [key, req.body[key]]));
     update.id = id;
-    const data = await Plan.findOneAndUpdate({ id, isDeleted: { $ne: true } }, update, { new: true, runValidators: true });
+    const data = await Plan.findOneAndUpdate({ id }, update, { new: true, runValidators: true });
     if (!data) return res.status(404).json({ success: false, message: 'Plan not found' });
     res.json({ success: true, data });
   } catch (error) {
@@ -95,40 +93,10 @@ const createPlan = async (req, res) => {
     res.status(201).json({ success: true, data });
   } catch (error) { res.status(error.code === 11000 ? 409 : 400).json({ message: error.code === 11000 ? 'A plan with this ID already exists.' : error.message }); }
 };
-
-const deletePlan = async (req, res) => {
-  try {
-    const id = String(req.params.id).toLowerCase();
-    if (!/^[a-z0-9][a-z0-9-]{0,79}$/.test(id)) return res.status(400).json({ success: false, message: 'Invalid plan id' });
-
-    const plan = await Plan.findOne({ id, isDeleted: { $ne: true } });
-    if (!plan) return res.status(404).json({ success: false, message: 'Plan not found.' });
-
-    const programs = await Program.find({ accessType: plan.accessType }).select('_id').lean();
-    if (programs.length) {
-      const batchesCount = await Batch.countDocuments({ programId: { $in: programs.map(program => program._id) } });
-      return res.status(409).json({
-        success: false,
-        programsCount: programs.length,
-        batchesCount,
-        message: `Cannot delete this plan: ${programs.length} program(s) and ${batchesCount} batch(es) use the ${plan.accessType} access type. First delete the batches, then the programs, and try deleting the plan again.`
-      });
-    }
-
-    plan.isActive = false;
-    plan.isDeleted = true;
-    await plan.save();
-    return res.json({ success: true, message: 'Plan deleted successfully.' });
-  } catch (error) {
-    return res.status(500).json({ success: false, message: error.message || 'Plan could not be deleted.' });
-  }
-};
-
 module.exports = {
   createPlan,
   getPlans,
   getPlanDetails,
   getAdminPlans,
-  updatePlan,
-  deletePlan
+  updatePlan
 };

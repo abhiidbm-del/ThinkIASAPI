@@ -25,7 +25,7 @@ class DemoTestService {
     const query = DemoTest.findById(testId);
     
     if (options.populateCreator) {
-      query.populate('createdBy', 'fullName email profileImage');
+      query.populate('createdBy', 'fullName email');
     }
     
     if (options.populateQuestions) {
@@ -139,7 +139,7 @@ class DemoTestService {
           select: 'tag'
         }
       })
-      .populate('createdBy', 'fullName email profileImage')
+      .populate('createdBy', 'fullName email')
       .exec();
   }
 }

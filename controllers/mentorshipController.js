@@ -109,8 +109,8 @@ const getAllMentorshipProgramsAdmin = async (req, res) => {
     const programs = await MentorshipProgram.find(query)
       .populate('programId', 'programName programNameHindi')
       .populate('batchId', 'batchName batchNameHindi startDate endDate')
-      .populate('createdBy', 'fullName email profileImage')
-      .populate('updatedBy', 'fullName email profileImage')
+      .populate('createdBy', 'fullName email')
+      .populate('updatedBy', 'fullName email')
       .sort({ createdAt: -1 });
 
     res.json({
@@ -173,8 +173,8 @@ const getActiveMentorshipPrograms = async (req, res) => {
 const getMentorshipProgramById = async (req, res) => {
   try {
     const program = await MentorshipProgram.findById(req.params.id)
-      .populate('createdBy', 'fullName email profileImage')
-      .populate('updatedBy', 'fullName email profileImage');
+      .populate('createdBy', 'fullName email')
+      .populate('updatedBy', 'fullName email');
 
     if (!program) {
       return res.status(404).json({
@@ -269,8 +269,8 @@ const updateMentorshipProgram = async (req, res) => {
       req.params.id,
       updates,
       { new: true, runValidators: true }
-    ).populate('createdBy', 'fullName email profileImage')
-     .populate('updatedBy', 'fullName email profileImage');
+    ).populate('createdBy', 'fullName email')
+     .populate('updatedBy', 'fullName email');
 
     res.json({
       success: true,

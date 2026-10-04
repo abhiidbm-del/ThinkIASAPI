@@ -28,7 +28,7 @@ class QuizService {
 
   static async getActiveQuizzes() {
     return await Quiz.find({ isActive: true })
-      .populate('createdBy', 'fullName email profileImage')
+      .populate('createdBy', 'fullName email')
       .sort({ createdAt: -1 });
   }
 
@@ -36,6 +36,9 @@ class QuizService {
     const quiz = await Quiz.findById(quizId);
     
     if (!quiz) throw new Error('Quiz not found');
+    if (!quiz.isActive && !req.user?.role === 'admin') {
+      throw new Error('Quiz is not active');
+    }
     
     // Get questions for this quiz
     const questions = await Question.find({ 
@@ -186,15 +189,9 @@ static async submitQuiz(quizId, submissionData) {
       .sort({ submittedAt: -1 });
   }
 
-  static async getAllQuizSubmissions() {
-    return await QuizSubmission.find()
-      .populate('quiz', 'title')
-      .sort({ submittedAt: -1 });
-  }
-
   static async getAllQuizzes() {
     return await Quiz.find()
-      .populate('createdBy', 'fullName email profileImage')
+      .populate('createdBy', 'fullName email')
       .sort({ createdAt: -1 });
   }
 

@@ -104,7 +104,7 @@ const createFolder = async (req, res) => {
 const createVideo = async (req, res) => {
   try {
     const userId = req.user._id;
-    const { category, name, parentId, fileLink, description, duration, thumbnail, language } = req.body;
+    const { category, name, parentId, fileLink, description, duration, thumbnail } = req.body;
 
     if (!category || !name || !fileLink) {
       return res.status(400).json({ 
@@ -201,7 +201,6 @@ const createVideo = async (req, res) => {
       duration: duration || '',
       thumbnail: thumbnail || '',
       fileType,
-      language: ['en', 'hi', 'both'].includes(language) ? language : 'both',
       createdBy: userId
     });
 
@@ -264,7 +263,7 @@ const updateVideo = async (req, res) => {
   try {
     const userId = req.user._id;
     const { id } = req.params;
-    const { name, fileLink, description, duration, thumbnail, language } = req.body;
+    const { name, fileLink, description, duration, thumbnail } = req.body;
 
     const video = await VideoLecture.findOne({
       _id: id,
@@ -334,10 +333,6 @@ const updateVideo = async (req, res) => {
 
     if (thumbnail !== undefined) {
       video.thumbnail = thumbnail;
-    }
-
-    if (['en', 'hi', 'both'].includes(language)) {
-      video.language = language;
     }
 
     await video.save();
@@ -472,7 +467,7 @@ const deleteItem = async (req, res) => {
 const getPublicDirectoryTree = async (req, res) => {
   try {
     const { category } = req.params;
-    const { parentId, lang } = req.query;
+    const { parentId } = req.query;
 
     const validCategories = [
       'gs1-videos', 'gs2-videos', 'gs3-videos', 
@@ -487,7 +482,7 @@ const getPublicDirectoryTree = async (req, res) => {
       });
     }
 
-    const tree = await VideoLecture.getPublicTreeByCategory(category, parentId, lang === 'hi' ? 'hi' : 'en');
+    const tree = await VideoLecture.getPublicTreeByCategory(category, parentId);
 
     res.json({
       success: true,

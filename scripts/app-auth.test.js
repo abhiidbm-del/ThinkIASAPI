@@ -44,7 +44,7 @@ test('app auth HTTP flow: email-first signup, fixed OTP, password reset and revo
  const registration={email,fullName:'App Student',phone:'9876543210',password,confirmPassword:password,verificationToken:verified.data.verificationToken,role:'admin',type:'combo'};
  await request('/register',{...registration,confirmPassword:'wrong'},null,400);
  const registered=await request('/register',registration,null,201);let token=registered.data.token;
- assert.equal(registered.data.user.role,'student');assert.equal(registered.data.user.type,'fresh');assert.equal(registered.data.user.emailVerified,true);assert.equal(registered.data.user.profileImage,null);assert.equal(registered.data.user.password,undefined);assert(await bcrypt.compare(password,users[0].password));
+ assert.equal(registered.data.user.role,'student');assert.equal(registered.data.user.type,'fresh');assert.equal(registered.data.user.emailVerified,true);assert.equal(registered.data.user.password,undefined);assert(await bcrypt.compare(password,users[0].password));
  await request('/me',undefined,token);await request('/protected-resource',undefined,token);
  await request('/register',registration,null,409);await request('/send-otp',{email},null,409);
  await request('/logout',{},token);await request('/me',undefined,token,401);await request('/protected-resource',undefined,token,401);

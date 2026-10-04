@@ -1,15 +1,5 @@
 const Directory = require('../models/Directory');
 const { normalizeMaterialLink } = require('../utils/materialLink');
-const { canAccessPlan } = require('../utils/planAccess');
-
-const normalizeSection = (value) => (value === 'mains' ? 'mains' : 'pre');
-const sectionFilter = (section) => (section === 'mains'
-  ? { section: 'mains' }
-  : { $or: [{ section: 'pre' }, { section: { $exists: false } }, { section: null }] });
-const resolveSection = (req, parent) => {
-  if (parent?.section) return normalizeSection(parent.section);
-  return normalizeSection(req.body.section || req.query.section);
-};
 
 // Create folder
 const createFolder = async (req, res) => {
@@ -49,11 +39,10 @@ const createFolder = async (req, res) => {
       parentPath = parent.fullPath;
     }
 
-    const section = resolveSection(req, parent);
     const fullPath = parentId ? `${parentPath}/${name}` : name;
 
     // Check if folder already exists
-    const existingFolder = await Directory.pathExists(fullPath, userId, section);
+    const existingFolder = await Directory.pathExists(fullPath, userId);
     if (existingFolder) {
       return res.status(409).json({ 
         message: 'Folder already exists' 
@@ -67,8 +56,7 @@ const createFolder = async (req, res) => {
       path: parentPath,
       fullPath,
       parent: parentId,
-      createdBy: userId,
-      section
+      createdBy: userId
     });
 
     res.status(201).json({
@@ -133,11 +121,10 @@ const createFile = async (req, res) => {
       parentPath = parent.fullPath;
     }
 
-    const section = resolveSection(req, parent);
     const fullPath = parentId ? `${parentPath}/${name}` : name;
 
     // Check if file already exists
-    const existingFile = await Directory.pathExists(fullPath, userId, section);
+    const existingFile = await Directory.pathExists(fullPath, userId);
     if (existingFile) {
       return res.status(409).json({ 
         message: 'File already exists' 
@@ -175,8 +162,7 @@ const createFile = async (req, res) => {
       fileLink: normalizedLink,
       description: description || '',
       fileType,
-      createdBy: userId,
-      section
+      createdBy: userId
     });
 
     res.status(201).json({
@@ -198,15 +184,10 @@ const getDirectoryTree = async (req, res) => {
   try {
     const userId = req.user._id;
     const { parentId } = req.query;
-    const section = normalizeSection(req.query.section);
-    if (req.user.role === 'student' && !canAccessPlan(req.user.type, section)) {
-      return res.status(403).json({
-        success: false,
-        message: section === 'mains' ? 'An active Mains plan is required.' : 'An active Prelims plan is required.'
-      });
-    }
 
-    let query = { ...sectionFilter(section) };
+    // For both admin and students, show ALL directories
+    // Students will have read-only access on frontend
+    let query = {};
     
     if (parentId) {
       query.parent = parentId;

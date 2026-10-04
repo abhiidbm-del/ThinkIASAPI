@@ -87,7 +87,7 @@ const getAllCoupons = async (req, res) => {
     }
 
     const coupons = await Coupon.find(filter)
-      .populate('createdBy', 'name email profileImage')
+      .populate('createdBy', 'name email')
       .sort({ createdAt: -1 })
       .limit(limit * 1)
       .skip((page - 1) * limit);
@@ -109,8 +109,8 @@ const getAllCoupons = async (req, res) => {
 const getCouponById = async (req, res) => {
   try {
     const coupon = await Coupon.findById(req.params.id)
-      .populate('createdBy', 'name email profileImage')
-      .populate('usedBy.user', 'name email profileImage');
+      .populate('createdBy', 'name email')
+      .populate('usedBy.user', 'name email');
 
     if (!coupon) {
       return res.status(404).json({ message: 'Coupon not found' });

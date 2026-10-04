@@ -152,7 +152,7 @@ const getAllResults = async (req, res) => {
   try {
     const results = await Result.find()
       .populate('test', 'title startTime duration')
-      .populate('student', 'fullName email profileImage')
+      .populate('student', 'fullName email')
       .sort({ submittedAt: -1 });
 
     const resultsWithPercentage = results.map(result => ({
@@ -187,7 +187,7 @@ const getDashboardCharts = async (req, res) => {
 const getStudents = async (req, res) => {
   try {
     const students = await User.find({ role: 'student' })
-      .select('isActive fullName email phone type profileImage planActivatedAt planExpiryAt createdAt updatedAt')
+      .select('isActive fullName email phone type planActivatedAt planExpiryAt createdAt updatedAt')
       .sort({ createdAt: -1 });
     
     res.json(students);
@@ -230,7 +230,7 @@ const getUsersByType = async (req, res) => {
     }
 
     const users = await User.find(filter)
-      .select('fullName email phone type profileImage createdAt')
+      .select('fullName email phone type createdAt')
       .sort({ createdAt: -1 });
 
     res.json(users);
@@ -270,8 +270,7 @@ const deleteUser = async (req, res) => {
       deletedUser: {
         id: user._id,
         email: user.email,
-        fullName: user.fullName,
-        profileImage: user.profileImage || null
+        fullName: user.fullName
       }
     });
 

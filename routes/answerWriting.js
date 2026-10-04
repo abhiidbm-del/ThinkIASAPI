@@ -24,8 +24,6 @@ const {
   getMyEvaluations
 } = require('../controllers/answerWritingController');
 const { auth, adminAuth } = require('../middleware/auth');
-const { requirePlan } = require('../utils/planAccess');
-const requireMains = requirePlan('mains');
 const { uploadAnswerSheet } = require('../config/r2');
 
 // ============================================
@@ -33,15 +31,15 @@ const { uploadAnswerSheet } = require('../config/r2');
 // ============================================
 
 // Student routes - Evaluations (SPECIFIC paths first)
-router.get('/my-evaluations', auth, requireMains, getMyEvaluations);
-router.get('/my-submissions', auth, requireMains, getMySubmissions);
-router.get('/available', auth, requireMains, getAvailableExercises);
+router.get('/my-evaluations', auth, getMyEvaluations);
+router.get('/my-submissions', auth, getMySubmissions);
+router.get('/available', auth, getAvailableExercises);
 router.get('/admin/all', auth, adminAuth, getAllAnswerWritingAdmin);
 
 // Student routes - Dynamic paths (must come after specific paths)
-router.get('/:exerciseId/my-evaluation', auth, requireMains, getMyEvaluation);
-router.get('/:id', auth, requireMains, getAnswerWritingById);
-router.post('/:id/submit', auth, requireMains, uploadAnswerSheet, submitAnswers);
+router.get('/:exerciseId/my-evaluation', auth, getMyEvaluation);
+router.get('/:id', auth, getAnswerWritingById);
+router.post('/:id/submit', auth, uploadAnswerSheet, submitAnswers);
 
 // ============================================
 // ADMIN ROUTES

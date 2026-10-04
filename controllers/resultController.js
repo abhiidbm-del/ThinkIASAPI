@@ -66,34 +66,57 @@ const getStudentTestResult = async (req, res) => {
 };
 
 // Other result controller functions...
-const studentRefId = (doc) => {
-  const student = doc?.student;
-  if (!student) return '';
-  return String(student._id || student);
-};
-
-const withRanks = async (results) => {
-  const ranked = [];
-  for (const result of results) {
-    if (!result?.test?._id) continue;
-    const testId = result.test._id.toString();
-    const allTestResults = (await ResultService.getTestResults(testId)).filter((item) => item.student);
-    const index = allTestResults.findIndex((item) => studentRefId(item) === studentRefId(result));
-    const payload = typeof result.toObject === 'function' ? result.toObject() : result;
-    ranked.push({
-      ...payload,
-      rank: index >= 0 ? index + 1 : allTestResults.length,
-      totalStudents: allTestResults.length
-    });
-  }
-  ranked.sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt));
-  return ranked;
-};
-
 const getStudentResults = async (req, res) => {
   try {
     const results = await ResultService.getStudentResults(req.user._id);
-    res.json(await withRanks(results));
+    
+    // Group results by test to calculate ranking per test
+    const resultsByTest = {};
+    
+    // Group results by test ID
+    results.forEach(result => {
+      const testId = result.test._id.toString();
+      if (!resultsByTest[testId]) {
+        resultsByTest[testId] = {
+          test: result.test,
+          results: []
+        };
+      }
+      resultsByTest[testId].results.push(result);
+    });
+    
+    // Calculate ranking for each test separately
+    const resultsWithRanking = [];
+    
+    for (const testId in resultsByTest) {
+      const { test, results: testResults } = resultsByTest[testId];
+      
+      // Get ALL results for this test (not just the student's)
+      const allTestResults = await ResultService.getTestResults(testId);
+      
+      // Calculate ranking for each result in this test
+      const rankedTestResults = allTestResults.map((testResult, index) => {
+        const studentResult = testResults.find(r => 
+          r.student._id.toString() === testResult.student._id.toString()
+        );
+        
+        if (studentResult) {
+          return {
+            ...studentResult.toObject(),
+            rank: index + 1,
+            totalStudents: allTestResults.length
+          };
+        }
+        return null;
+      }).filter(Boolean); // Remove nulls
+      
+      resultsWithRanking.push(...rankedTestResults);
+    }
+    
+    // Sort by submission date (most recent first)
+    resultsWithRanking.sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt));
+
+    res.json(resultsWithRanking);
   } catch (error) {
     console.error('Get student results error:', error);
     handleError(res, error, messages.en.serverError);
@@ -133,7 +156,7 @@ const getStudentResultsByAdmin = async (req, res) => {
     const student = await User.findOne({ 
       _id: studentId, 
       role: 'student' 
-    }).select('_id fullName email role profileImage');
+    }).select('_id fullName email role');
     
     if (!student) {
       return res.status(404).json({ 
@@ -152,10 +175,57 @@ const getStudentResultsByAdmin = async (req, res) => {
       return res.json([]); // Return empty array like first API
     }
     
-    const resultsWithRanking = (await withRanks(results)).map((item) => ({
-      ...item,
-      student: studentId
-    }));
+    // Group results by test to calculate ranking per test
+    const resultsByTest = {};
+    
+    // Group results by test ID
+    results.forEach(result => {
+      const testId = result.test._id.toString();
+      if (!resultsByTest[testId]) {
+        resultsByTest[testId] = {
+          test: result.test,
+          results: []
+        };
+      }
+      resultsByTest[testId].results.push(result);
+    });
+    
+    // Calculate ranking for each test separately
+    const resultsWithRanking = [];
+    
+    for (const testId in resultsByTest) {
+      const { test, results: testResults } = resultsByTest[testId];
+      
+      // Get ALL results for this test (not just the student's)
+      const allTestResults = await Result.find({ test: testId })
+        .populate('student', 'fullName email')
+        .sort({ score: -1, submittedAt: 1 });
+      
+      // Calculate ranking for each result in this test
+      const rankedTestResults = allTestResults.map((testResult, index) => {
+        const studentResult = testResults.find(r => 
+          r.student._id.toString() === testResult.student._id.toString()
+        );
+        
+        if (studentResult) {
+          // Return result with just student ID (not full object) to match first API
+          return {
+            ...studentResult.toObject(),
+            rank: index + 1,
+            totalStudents: allTestResults.length,
+            student: studentId // Just the ID string, not the full object
+          };
+        }
+        return null;
+      }).filter(Boolean); // Remove nulls
+      
+      resultsWithRanking.push(...rankedTestResults);
+    }
+    
+    // Sort by submission date (most recent first)
+    resultsWithRanking.sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt));
+
+    // Return direct array like first API (no wrapping success/data)
     res.json(resultsWithRanking);
     
   } catch (error) {

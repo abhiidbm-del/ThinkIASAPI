@@ -133,7 +133,7 @@ const getStudentResultsByAdmin = async (req, res) => {
     const student = await User.findOne({ 
       _id: studentId, 
       role: 'student' 
-    }).select('_id fullName email role');
+    }).select('_id fullName email role profileImage');
     
     if (!student) {
       return res.status(404).json({ 

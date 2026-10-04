@@ -16,6 +16,8 @@ const topicwiseDirectorySchema = new mongoose.Schema({
     type: String,
     required: true,
     enum: [
+      'prelims-paper-1',
+      'prelims-paper-2',
       'gs1-analysis', 
       'gs2-analysis', 
       'gs3-analysis', 

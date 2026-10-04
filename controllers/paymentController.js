@@ -149,7 +149,7 @@ const verifyRazorpayPayment = async (req, res) => {
       user.planExpiryAt = null;
       await user.save();
       return res.json({ success: true, message: 'Payment already verified', payment, user: {
-        id: user._id, fullName: user.fullName, email: user.email, type: user.type
+        id: user._id, fullName: user.fullName, email: user.email, profileImage: user.profileImage || null, type: user.type
       } });
     }
     if (planId && planId !== payment.plan) return res.status(400).json({ success: false, message: 'Plan does not match the order' });
@@ -204,6 +204,7 @@ const verifyRazorpayPayment = async (req, res) => {
         id: user._id,
         fullName: user.fullName,
         email: user.email,
+        profileImage: user.profileImage || null,
         type: user.type
       }
     });
@@ -381,7 +382,7 @@ const getAllPayments = async (req, res) => {
     if (status) filter.status = status;
 
     const payments = await Payment.find(filter)
-      .populate('user', 'name email phone type')
+      .populate('user', 'name email phone type profileImage')
       .sort({ createdAt: -1 })
       .limit(limit * 1)
       .skip((page - 1) * limit);
@@ -406,7 +407,7 @@ const getAllPayments = async (req, res) => {
 const getPaymentDetails = async (req, res) => {
   try {
     const payment = await Payment.findById(req.params.id)
-      .populate('user', 'name email phone type');
+      .populate('user', 'name email phone type profileImage');
 
     if (!payment) {
       return res.status(404).json({ 

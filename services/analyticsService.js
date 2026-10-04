@@ -30,7 +30,7 @@ class AnalyticsService {
     
     if (!test) throw new Error('Test not found');
 
-    const results = await Result.find({ test: testId }).populate('student', 'fullName email');
+    const results = await Result.find({ test: testId }).populate('student', 'fullName email profileImage');
     const totalStudents = results.length;
     
     const scores = results.map(r => r.score);

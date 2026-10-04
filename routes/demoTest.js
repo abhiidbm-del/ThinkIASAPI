@@ -13,25 +13,23 @@ const {
   getStudentDemoTestResult,
   getStudentDemoResults
 } = require('../controllers/demoTestController');
-const { auth, studentAuth, adminAuth } = require('../middleware/auth');
+const { auth, optionalAuth, studentAuth, adminAuth } = require('../middleware/auth');
 const { apiLimiter } = require('../middleware/rateLimiter');
 
-// Apply authentication and rate limiting to all routes
+router.get('/available', optionalAuth, apiLimiter, getAvailableDemoTests);
+router.get('/admin', auth, adminAuth, apiLimiter, getDemoTests);
+router.get('/student/results', auth, studentAuth, apiLimiter, getStudentDemoResults);
+router.get('/:id/check-availability', optionalAuth, apiLimiter, checkDemoTestAvailability);
+router.get('/:id/result', auth, studentAuth, apiLimiter, getStudentDemoTestResult);
+router.get('/:id', optionalAuth, apiLimiter, getDemoTestById);
+
 router.use(auth, apiLimiter);
 
-// Admin routes
 router.post('/create', adminAuth, createDemoTest);
-router.get('/admin', adminAuth, getDemoTests);
 router.put('/:id', adminAuth, updateDemoTest);
 router.delete('/delete/:id', adminAuth, deleteDemoTest);
 router.patch('/:id/toggle-status', adminAuth, toggleDemoTestStatus);
 
-// Student routes
-router.get('/available', getAvailableDemoTests);
-router.get('/:id', getDemoTestById);
 router.post('/:id/submit', studentAuth, submitDemoTest);
-router.get('/:id/check-availability', checkDemoTestAvailability);
-router.get('/:id/result', studentAuth, getStudentDemoTestResult);
-router.get('/student/results', studentAuth, getStudentDemoResults);
 
 module.exports = router;

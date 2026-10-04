@@ -82,11 +82,11 @@ const getModuleTests = async (req, res) => {
     
     if (req.user && req.user.role === 'admin') {
       moduleTests = await ModuleTest.find()
-        .populate('createdBy', 'fullName email')
+        .populate('createdBy', 'fullName email profileImage')
         .sort({ createdAt: -1 });
     } else {
       moduleTests = await ModuleTest.find({ isActive: true })
-        .populate('createdBy', 'fullName email')
+        .populate('createdBy', 'fullName email profileImage')
         .sort({ createdAt: -1 });
     }
 
@@ -100,7 +100,7 @@ const getModuleTests = async (req, res) => {
 const getModuleTestById = async (req, res) => {
   try {
     const moduleTest = await ModuleTest.findById(req.params.id)
-      .populate('createdBy', 'fullName email');
+      .populate('createdBy', 'fullName email profileImage');
     
     if (!moduleTest) {
       return res.status(404).json({ message: 'Module test not found' });
@@ -160,7 +160,7 @@ const updateModuleTest = async (req, res) => {
       req.params.id,
       testData,
       { new: true, runValidators: true }
-    ).populate('createdBy', 'fullName email');
+    ).populate('createdBy', 'fullName email profileImage');
     
     if (!moduleTest) {
       return res.status(404).json({ message: 'Module test not found' });
@@ -203,7 +203,7 @@ const toggleModuleTestActive = async (req, res) => {
       req.params.id,
       { isActive },
       { new: true }
-    ).populate('createdBy', 'fullName email');
+    ).populate('createdBy', 'fullName email profileImage');
     
     if (!moduleTest) {
       return res.status(404).json({ message: 'Module test not found' });
@@ -248,7 +248,7 @@ const getModuleTestsByModule = async (req, res) => {
     }
     
     const tests = await ModuleTest.find(query)
-      .populate('createdBy', 'fullName email')
+      .populate('createdBy', 'fullName email profileImage')
       .sort({ createdAt: -1 });
     
     res.json(tests);

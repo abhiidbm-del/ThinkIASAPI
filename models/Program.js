@@ -17,8 +17,23 @@ const programSchema = new mongoose.Schema({
   programCategory: {
     type: String,
     required: [true, 'Program category is required'],
-    enum: ['Mentorship Course', 'Optional Mentorship Course', 'Test Series', 'Optional Test Series', 'Essay', 'Prelims Program', 'Mains Program', 'Interview Program'],
+    enum: ['Mentorship Course', 'Optional Mentorship Course', 'Test Series', 'Optional Test Series', 'Essay', 'Qualifying Paper', 'Prelims Program', 'Mains Program', 'Interview Program'],
     default: 'Mentorship Course'
+  },
+  examination: {
+    type: String,
+    enum: ['UPSC', 'UPPSC', 'APSC', 'EPFO'],
+    default: 'UPSC'
+  },
+  programStage: {
+    type: String,
+    enum: ['Prelims', 'Mains', 'Interview', 'Combo I', 'Combo II'],
+    default: 'Prelims'
+  },
+  paperVariant: {
+    type: String,
+    enum: ['', 'GS', 'GS+CSAT'],
+    default: ''
   },
   year: {
     type: String,
@@ -34,6 +49,11 @@ const programSchema = new mongoose.Schema({
     type: Number,
     min: [0, 'Discounted price cannot be negative'],
     default: null
+  },
+  displayImageHindi: {
+    type: String,
+    trim: true,
+    default: ''
   },
   displayImage: {
     type: String,

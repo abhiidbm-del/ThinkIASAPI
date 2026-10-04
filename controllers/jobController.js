@@ -141,7 +141,7 @@ exports.getAllJobsAdmin = async (req, res) => {
       .sort({ createdAt: -1 })
       .limit(limit * 1)
       .skip((page - 1) * limit)
-      .populate('createdBy', 'name email');
+      .populate('createdBy', 'name email profileImage');
     
     const total = await Job.countDocuments(query);
     

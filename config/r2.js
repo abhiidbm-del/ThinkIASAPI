@@ -196,6 +196,27 @@ const deleteFromR2 = async (fileUrl) => {
   }
 };
 
+const fs = require('fs');
+const profileDir = path.join(__dirname, '../uploads/profiles');
+fs.mkdirSync(profileDir, { recursive: true });
+const hasR2 = !!(process.env.R2_BUCKET_NAME && process.env.R2_ENDPOINT && process.env.R2_ACCESS_KEY_ID);
+const profileImageUpload = multer({
+  storage: hasR2 ? multerS3({
+    s3: s3Client,
+    bucket: process.env.R2_BUCKET_NAME,
+    acl: 'public-read',
+    contentType: multerS3.AUTO_CONTENT_TYPE,
+    key: (req, file, cb) => {
+      cb(null, `profiles/${req.user._id}/${Date.now()}-${Math.round(Math.random() * 1e9)}${path.extname(file.originalname)}`);
+    }
+  }) : multer.diskStorage({
+    destination: (_req, _file, cb) => cb(null, profileDir),
+    filename: (req, file, cb) => cb(null, `${req.user?._id || 'user'}-${Date.now()}${path.extname(file.originalname)}`)
+  }),
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => cb(null, ['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(file.mimetype))
+}).single('image');
+
 const ticketAttachmentUpload = multer({
   storage: multerS3({
     s3: s3Client,
@@ -208,4 +229,4 @@ const ticketAttachmentUpload = multer({
   fileFilter: (_req, file, cb) => cb(null, /^(image\/(jpeg|png|webp|gif)|application\/pdf)$/.test(file.mimetype))
 }).array('attachments', 5);
 
-module.exports = { uploadAnswerSheet, testimonialImageUpload, uploadProctorRecording, uploadProctorSnapshot, ticketAttachmentUpload, getPublicR2Url, deleteFromR2, getPresignedUrl, s3Client };
+module.exports = { uploadAnswerSheet, testimonialImageUpload, profileImageUpload, uploadProctorRecording, uploadProctorSnapshot, ticketAttachmentUpload, getPublicR2Url, deleteFromR2, getPresignedUrl, s3Client };

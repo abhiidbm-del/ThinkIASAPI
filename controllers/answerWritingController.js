@@ -138,8 +138,8 @@ const getAllAnswerWritingAdmin = async (req, res) => {
     }
 
     const exercises = await AnswerWriting.find(query)
-      .populate('createdBy', 'fullName email')
-      .populate('updatedBy', 'fullName email')
+      .populate('createdBy', 'fullName email profileImage')
+      .populate('updatedBy', 'fullName email profileImage')
       .sort({ order: -1, createdAt: -1 });
 
     const data = exercises.map(ex => getBilingualContent(ex, lang));
@@ -583,7 +583,7 @@ const getExerciseSubmissions = async (req, res) => {
     const { getPresignedUrl } = require('../config/r2');
 
     const submissions = await StudentAnswerSubmission.find({ answerWritingId: id })
-      .populate('studentId', 'fullName email phone')
+      .populate('studentId', 'fullName email phone profileImage')
       .sort({ submittedAt: -1 });
 
     // Generate presigned URLs for each submission
@@ -664,7 +664,7 @@ const submitEvaluation = async (req, res) => {
     await submission.save();
 
     // Populate student info for response
-    await submission.populate('studentId', 'fullName email');
+    await submission.populate('studentId', 'fullName email profileImage');
 
     res.json({
       success: true,
@@ -692,7 +692,7 @@ const getEvaluationStatus = async (req, res) => {
     const { submissionId } = req.params;
 
     const submission = await StudentAnswerSubmission.findById(submissionId)
-      .populate('studentId', 'fullName email');
+      .populate('studentId', 'fullName email profileImage');
 
     if (!submission) {
       return res.status(404).json({
@@ -737,7 +737,7 @@ const getExerciseEvaluations = async (req, res) => {
     const { exerciseId } = req.params;
 
     const submissions = await StudentAnswerSubmission.find({ answerWritingId: exerciseId })
-      .populate('studentId', 'fullName email phone')
+      .populate('studentId', 'fullName email phone profileImage')
       .sort({ submittedAt: -1 });
 
     const evaluationData = submissions.map(submission => {
@@ -909,7 +909,7 @@ const getModelAnswer = async (req, res) => {
     const { id } = req.params;
 
     const exercise = await AnswerWriting.findById(id)
-      .populate('modelAnswer.updatedBy', 'fullName email');
+      .populate('modelAnswer.updatedBy', 'fullName email profileImage');
 
     if (!exercise) {
       return res.status(404).json({

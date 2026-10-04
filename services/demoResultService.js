@@ -164,19 +164,19 @@ class DemoResultService {
 
   static async getTestResults(testId) {
     return await DemoResult.find({ test: testId })
-      .populate('student', 'fullName email phone')
+      .populate('student', 'fullName email phone profileImage')
       .sort({ score: -1, submittedAt: 1 });
   }
 
   static async getAdminTestResults(testId) {
     return await DemoResult.find({ test: testId })
-      .populate('student', 'fullName email phone')
+      .populate('student', 'fullName email phone profileImage')
       .sort({ submittedAt: -1 });
   }
 
   static async getAllAdminResults() {
     return await DemoResult.find()
-      .populate('student', 'fullName email phone')
+      .populate('student', 'fullName email phone profileImage')
       .populate('test', 'title')
       .sort({ submittedAt: -1 });
   }
@@ -186,7 +186,7 @@ class DemoResultService {
     // First, get the result
     const result = await DemoResult.findOne({ test: testId, student: studentId })
       .sort({ submittedAt: -1 })
-      .populate('student', 'fullName email')
+      .populate('student', 'fullName email profileImage')
       .lean();
 
     if (!result) {
@@ -243,7 +243,7 @@ class DemoResultService {
 
   static async calculateStudentRank(testId, studentId) {
     const results = await DemoResult.find({ test: testId })
-      .populate('student', 'fullName email')
+      .populate('student', 'fullName email profileImage')
       .sort({ score: -1, submittedAt: 1 })
       .lean();
 
@@ -280,7 +280,7 @@ class DemoResultService {
   static async getResultById(resultId) {
     return await DemoResult.findById(resultId)
       .populate('test', 'title questionUids marksPerQuestion negativeMarks')
-      .populate('student', 'fullName email');
+      .populate('student', 'fullName email profileImage');
   }
 }
 

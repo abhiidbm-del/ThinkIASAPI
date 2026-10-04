@@ -1,0 +1,6 @@
+name: ThinkIAS App — Local
+values:
+  - key: baseUrl
+    value: 'http://localhost:5000'
+  - key: email
+    value: ''

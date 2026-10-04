@@ -1,0 +1,16 @@
+# Use this workspace to collaborate
+workspace:
+  id: ddf81d96-bf39-4288-874a-edee11e232fd
+
+localResources:
+  collections:
+    - ../ThinkIAS-App-Auth.postman_collection.json
+    - ../ThinkIAS App Auth — UI flow - test OTP 1234
+  environments:
+    - ../ThinkIAS App — Local.environment.yaml
+
+# Each entry here maps a local resource to one or more corresponding objects in Postman Cloud
+
+cloudResources:
+  collections:
+    ../postman/collections/ThinkIAS App Auth — UI flow - test OTP 1234 Copy: 7be8db09-ffd8-43eb-a98a-b16efb643b15

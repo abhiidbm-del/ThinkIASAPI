@@ -1,0 +1,21 @@
+$kind: http-request
+name: 02 — Resend code / countdown
+description: Before the UI 120-second timer finishes, 429 plus retryAfterSeconds is expected. After the timer it returns 200. Both are valid in this collection.
+url: "{{baseUrl}}/api/app/auth/resend-otp"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "email": "{{email}}",
+      "challengeId": "{{registrationChallengeId}}"
+    }
+auth:
+  type: noauth
+scripts:
+  - type: afterResponse
+    code: pm.test('Resend or countdown', function(){pm.expect(pm.response.code).to.be.oneOf([200,429]);});
+    language: text/javascript
+order: 2000

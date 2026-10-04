@@ -1,0 +1,21 @@
+const router = require('express').Router();
+const { auth, adminAuth } = require('../middleware/auth');
+const { uploadProctorRecording, uploadProctorSnapshot } = require('../config/r2');
+const controller = require('../controllers/proctorController');
+
+router.use(auth);
+router.get('/admin/sessions', adminAuth, controller.adminList);
+router.get('/ice-config', controller.iceConfig);
+router.post('/admin/sessions/:id/live/offer', adminAuth, controller.createLiveOffer);
+router.get('/admin/sessions/:id/live/answer', adminAuth, controller.getLiveAnswer);
+router.delete('/admin/sessions/:id/live', adminAuth, controller.closeLiveView);
+router.delete('/admin/sessions/:id', adminAuth, controller.adminDelete);
+router.delete('/admin/sessions', adminAuth, controller.adminDeleteAll);
+router.post('/sessions', controller.start);
+router.get('/sessions/:id/live/offer', controller.getLiveOffer);
+router.post('/sessions/:id/live/answer', controller.submitLiveAnswer);
+router.patch('/sessions/:id/heartbeat', controller.heartbeat);
+router.post('/sessions/:id/snapshot', uploadProctorSnapshot, controller.snapshot);
+router.post('/sessions/:id/end', controller.end);
+router.post('/sessions/:id/complete', uploadProctorRecording, controller.complete);
+module.exports = router;

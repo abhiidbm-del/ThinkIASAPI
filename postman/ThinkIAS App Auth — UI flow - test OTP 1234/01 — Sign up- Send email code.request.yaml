@@ -1,0 +1,24 @@
+$kind: http-request
+name: "01 — Sign up: Send email code"
+url: "{{baseUrl}}/api/app/auth/send-otp"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "email": "{{email}}"
+    }
+auth:
+  type: noauth
+scripts:
+  - type: beforeRequest
+    code: if (!pm.environment.get('email')) pm.collectionVariables.set('email', 'app.student.'+Date.now()+'@example.com');
+    language: text/javascript
+  - type: afterResponse
+    code: |-
+      pm.test('HTTP 200', function () { pm.response.to.have.status(200); });
+      if (pm.response.code === 200) { const data=pm.response.json().data; pm.collectionVariables.set('registrationChallengeId', data.challengeId); }
+    language: text/javascript
+order: 1000

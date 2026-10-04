@@ -1,0 +1,32 @@
+const router = require('express').Router();
+const {body,validationResult} = require('express-validator');
+const controller = require('../controllers/appAuthController');
+const {auth} = require('../middleware/auth');
+const {authLimiter} = require('../middleware/rateLimiter');
+const validate = rules => [...rules,(req,res,next)=>{
+  const errors=validationResult(req);
+  if (!errors.isEmpty()) return res.status(400).json({success:false,message:'Please check the entered details.',errors:errors.array().map(e=>({field:e.path,message:e.msg}))});
+  next();
+}];
+const email=()=>body('email').isString().bail().trim().isEmail().withMessage('Enter a valid email address.').bail().customSanitizer(value=>value.toLowerCase());
+const id=()=>body('challengeId').isUUID(4).withMessage('A valid challengeId is required.');
+const proof=field=>body(field).isString().bail().matches(/^[a-f0-9]{64}$/).withMessage('A verification token is required.');
+const password=()=>body('password').isString().bail().isLength({min:6}).withMessage('Password must have at least 6 characters.').bail().custom(value=>Buffer.byteLength(value,'utf8')<=72).withMessage('Password must be at most 72 UTF-8 bytes.');
+const confirmation=()=>body('confirmPassword').isString().bail().custom((value,{req})=>value===req.body.password).withMessage('Passwords do not match.');
+const otp=()=>body('otp').isString().bail().matches(/^\d{4}$/).withMessage('Enter the 4-digit test code 1234.');
+router.use(authLimiter);
+router.post('/send-otp',validate([email()]),controller.sendOtp);
+router.post('/resend-otp',validate([email(),id()]),controller.resendOtp);
+router.post('/verify-email',validate([email(),id(),otp()]),controller.verifyEmail);
+router.post('/register',validate([email(),proof('verificationToken'),body('fullName').isString().bail().trim().isLength({min:2,max:100}),body('phone').isString().bail().trim().matches(/^\+?[0-9]{10,15}$/).withMessage('Enter a valid mobile number.'),password(),confirmation()]),controller.register);
+router.post('/login',validate([email(),body('password').isString().bail().notEmpty()]),controller.login);
+router.post('/forgot-password',validate([email()]),controller.forgotPassword);
+router.post('/verify-reset-otp',validate([email(),id(),otp()]),controller.verifyResetOtp);
+router.post('/reset-password',validate([email(),proof('resetToken'),password(),confirmation()]),controller.resetPassword);
+router.use(auth,(req,res,next)=>{
+  if (!req.appSession || req.user.role!=='student') return res.status(401).json({success:false,message:'Please log in through the app.'});
+  next();
+});
+router.get('/me',controller.me);
+router.post('/logout',controller.logout);
+module.exports=router;

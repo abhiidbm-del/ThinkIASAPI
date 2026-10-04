@@ -1,0 +1,14 @@
+$kind: collection
+name: ThinkIAS App Auth — UI flow / test OTP 1234 Copy
+description: Email-first registration matching ThinkIAS-APP-UI PDFs. No email is sent. Test OTP is 1234. Run requests in order. The first request generates a unique test email unless an environment email is set. App tokens expire after 24h and are revoked on logout or app password reset.
+variables:
+  baseUrl: http://localhost:5000
+  email: ""
+  password: Student123!
+  newPassword: Changed123!
+  otp: "1234"
+  registrationChallengeId: ""
+  verificationToken: ""
+  resetChallengeId: ""
+  resetToken: ""
+  token: ""

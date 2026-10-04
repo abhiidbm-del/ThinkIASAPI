@@ -1,0 +1,20 @@
+$kind: http-request
+url: "{{baseUrl}}/api/app/auth/verify-email"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "email": "{{email}}",
+      "challengeId": "{{registrationChallengeId}}",
+      "otp": "9999"
+    }
+auth:
+  type: noauth
+scripts:
+  - type: afterResponse
+    code: pm.test('HTTP 400', function () { pm.response.to.have.status(400); });
+    language: text/javascript
+order: 3000

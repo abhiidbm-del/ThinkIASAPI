@@ -13,7 +13,8 @@ const createFolder = async (req, res) => {
     }
 
     const validCategories = [
-      'gs1-analysis', 'gs2-analysis', 'gs3-analysis', 
+      'prelims-paper-1', 'prelims-paper-2',
+      'gs1-analysis', 'gs2-analysis', 'gs3-analysis',
       'gs4-analysis', 'essay-analysis', 'optional-subjects'
     ];
     
@@ -103,7 +104,8 @@ const createFile = async (req, res) => {
     }
 
     const validCategories = [
-      'gs1-analysis', 'gs2-analysis', 'gs3-analysis', 
+      'prelims-paper-1', 'prelims-paper-2',
+      'gs1-analysis', 'gs2-analysis', 'gs3-analysis',
       'gs4-analysis', 'essay-analysis', 'optional-subjects'
     ];
     
@@ -212,7 +214,8 @@ const getDirectoryTree = async (req, res) => {
     const { parentId } = req.query;
 
     const validCategories = [
-      'gs1-analysis', 'gs2-analysis', 'gs3-analysis', 
+      'prelims-paper-1', 'prelims-paper-2',
+      'gs1-analysis', 'gs2-analysis', 'gs3-analysis',
       'gs4-analysis', 'essay-analysis', 'optional-subjects'
     ];
     
@@ -432,7 +435,8 @@ const getPublicDirectoryTree = async (req, res) => {
     const { parentId } = req.query;
 
     const validCategories = [
-      'gs1-analysis', 'gs2-analysis', 'gs3-analysis', 
+      'prelims-paper-1', 'prelims-paper-2',
+      'gs1-analysis', 'gs2-analysis', 'gs3-analysis',
       'gs4-analysis', 'essay-analysis', 'optional-subjects'
     ];
     

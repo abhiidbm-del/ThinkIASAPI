@@ -135,7 +135,7 @@ class ResultService {
 
   static async getTestResults(testId) {
     return await Result.find({ test: testId })
-      .populate('student', 'fullName email')
+      .populate('student', 'fullName email profileImage')
       .sort({ score: -1, submittedAt: 1 });
   }
 
@@ -153,7 +153,7 @@ class ResultService {
         }
       }
     })
-    .populate('student', 'fullName email');
+    .populate('student', 'fullName email profileImage');
 }
 
   static async getStudentResultsForTests(studentId, testIds) {
@@ -167,7 +167,7 @@ class ResultService {
 
   static async calculateStudentRank(testId, studentId) {
     const results = await Result.find({ test: testId })
-      .populate('student', 'fullName email')
+      .populate('student', 'fullName email profileImage')
       .sort({ score: -1, submittedAt: 1 })
       .lean();
 
@@ -204,7 +204,7 @@ class ResultService {
   static async getResultById(resultId) {
     return await Result.findById(resultId)
       .populate('test', 'title questionUids marksPerQuestion negativeMarks')
-      .populate('student', 'fullName email');
+      .populate('student', 'fullName email profileImage');
   }
 }
 

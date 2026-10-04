@@ -126,7 +126,7 @@ const getQuestionsByTag = async (req, res) => {
       isActive: true 
     })
       .populate('tags', 'tag')
-      .populate('createdBy', 'fullName email')
+      .populate('createdBy', 'fullName email profileImage')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limitNum)

@@ -52,6 +52,7 @@ const getMenuItems = (user) => {
         children: [
           { name: 'Testimonials', path: '/testimonials', icon: 'format_quote' },
           { name: 'Plan Benefits', path: '/support-features', icon: 'support_agent' },
+          { name: 'App Settings', path: '/app-settings', icon: 'phone_android' },
           { name: 'Manage Plans', path: '/manage-plans', icon: 'payments' },
           //{ name: 'Careers', path: '/careers', icon: 'work' },
           { name: 'Website Quiz', path: '/quizzes', icon: 'fact_check' },

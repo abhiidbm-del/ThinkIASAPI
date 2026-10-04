@@ -44,7 +44,7 @@ const grantReopen = async ({ examId, userId, email, until, createdBy }) => {
     { until: untilDate, createdBy },
     { upsert: true, new: true, setDefaultsOnInsert: true }
   );
-  return { record, student: { _id: user._id, fullName: user.fullName, email: user.email } };
+  return { record, student: { _id: user._id, fullName: user.fullName, email: user.email, profileImage: user.profileImage || null } };
 };
 
 module.exports = { activeReopen, examWindow, grantReopen };
